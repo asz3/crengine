@@ -79,6 +79,7 @@ enum css_decl_code {
     cssd_initial_letter,
     cssd_initial_letter2, // -webkit-initial-letter
     cssd_line_height,
+    cssd_block_step_size,
     cssd_letter_spacing,
     cssd_width,
     cssd_height,
@@ -193,6 +194,7 @@ static const char * css_decl_name[] = {
     "initial-letter",
     "-webkit-initial-letter",
     "line-height",
+    "block-step-size",
     "letter-spacing",
     "width",
     "height",
@@ -4507,6 +4509,8 @@ bool LVCssDeclaration::parse( const char * &decl, bool higher_importance, lxmlDo
             case cssd_line_height:
             case cssd_letter_spacing:
                 IF_g_PUSH_LENGTH_AND_break(1, true, css_val_unspecified, css_generic_normal);
+            case cssd_block_step_size:
+                IF_g_PUSH_LENGTH_AND_break(1, false, css_val_unspecified, css_generic_none);
             case cssd_font_size:
                 IF_g_PUSH_LENGTH_AND_break(1, true, css_val_rem, 256);
             case cssd_width:
@@ -4530,7 +4534,8 @@ bool LVCssDeclaration::parse( const char * &decl, bool higher_importance, lxmlDo
                     // borders don't accept length in %
                     bool accept_percent = true;
                     if ( prop_code==cssd_border_bottom_width || prop_code==cssd_border_top_width ||
-                            prop_code==cssd_border_left_width || prop_code==cssd_border_right_width )
+                            prop_code==cssd_border_left_width || prop_code==cssd_border_right_width ||
+                            prop_code==cssd_block_step_size )
                         accept_percent = false;
                     // only margin accepts negative values
                     bool accept_negative = false;
@@ -4550,7 +4555,8 @@ bool LVCssDeclaration::parse( const char * &decl, bool higher_importance, lxmlDo
                     // (also accepts it with min-width, min-height for style tweaks user sake)
                     bool accept_none = false;
                     if ( prop_code==cssd_max_width || prop_code==cssd_max_height ||
-                            prop_code==cssd_min_width || prop_code==cssd_min_height )
+                            prop_code==cssd_min_width || prop_code==cssd_min_height ||
+                            prop_code==cssd_block_step_size )
                         accept_none = true;
                     // only line-height and letter-spacing accept keyword "normal"
                     bool accept_normal = false;
@@ -5700,6 +5706,9 @@ void LVCssDeclaration::apply( css_style_rec_t * style, const ldomNode * node ) c
         case cssd_line_height:
             style->Apply( read_length(p), &style->line_height, imp_bit_line_height, is_important );
             style->flags |= STYLE_REC_FLAG_INHERITABLE_APPLIED;
+            break;
+        case cssd_block_step_size:
+            style->Apply( read_length(p), &style->block_step_size, imp_bit_block_step_size, is_important );
             break;
         case cssd_letter_spacing:
             style->Apply( read_length(p), &style->letter_spacing, imp_bit_letter_spacing, is_important );

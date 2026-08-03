@@ -48,7 +48,7 @@ lUInt32 calcHash(font_ref_t & f)
 lUInt32 calcHash(css_style_rec_t & rec)
 {
     if ( !rec.hash )
-        rec.hash = ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
+        rec.hash = (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
          + (lUInt32)rec.important[0]) * 31
          + (lUInt32)rec.important[1]) * 31
          + (lUInt32)rec.important[2]) * 31
@@ -75,6 +75,7 @@ lUInt32 calcHash(css_style_rec_t & rec)
          + (lUInt32)rec.font_features.pack()) * 31
          + (lUInt32)rec.font_optical_sizing) * 31
          + (lUInt32)rec.line_height.pack()) * 31
+         + (lUInt32)rec.block_step_size.pack()) * 31
          + (lUInt32)rec.color.pack()) * 31
          + (lUInt32)rec.background_color.pack()) * 31
          + (lUInt32)rec.width.pack()) * 31
@@ -150,6 +151,7 @@ bool operator == (const css_style_rec_t & r1, const css_style_rec_t & r2)
            r1.hyphenate == r2.hyphenate &&
            r1.vertical_align == r2.vertical_align &&
            r1.line_height == r2.line_height &&
+           r1.block_step_size == r2.block_step_size &&
            r1.letter_spacing == r2.letter_spacing &&
            r1.initial_letter == r2.initial_letter &&
            r1.page_break_before == r2.page_break_before &&
@@ -375,6 +377,7 @@ bool css_style_rec_t::serialize( SerialBuf & buf )
     ST_PUT_ENUM(font_optical_sizing);
     ST_PUT_LEN(text_indent);        //    css_length_t         text_indent;
     ST_PUT_LEN(line_height);        //    css_length_t         line_height;
+    ST_PUT_LEN(block_step_size);    //    css_length_t         block_step_size;
     ST_PUT_LEN(width);              //    css_length_t         width;
     ST_PUT_LEN(height);             //    css_length_t         height;
     ST_PUT_LEN(min_width);          //    css_length_t         min_width;
@@ -452,6 +455,7 @@ bool css_style_rec_t::deserialize( SerialBuf & buf )
     ST_GET_ENUM(css_font_optical_sizing_t, font_optical_sizing);
     ST_GET_LEN(text_indent);                                //    css_length_t         text_indent;
     ST_GET_LEN(line_height);                                //    css_length_t         line_height;
+    ST_GET_LEN(block_step_size);                            //    css_length_t         block_step_size;
     ST_GET_LEN(width);                                      //    css_length_t         width;
     ST_GET_LEN(height);                                     //    css_length_t         height;
     ST_GET_LEN(min_width);                                  //    css_length_t         min_width;

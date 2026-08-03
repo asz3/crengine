@@ -5102,6 +5102,33 @@ int pagebreakhelper(ldomNode *enode,int width)
 int  renderBlockElementLegacy( LVRendPageContext & context, ldomNode * enode, int x, int y, int width, int usable_right_overflow );
 void renderBlockElementEnhanced( FlowState * flow, ldomNode * enode, int x, int width, lUInt32 flags );
 
+static inline int getBlockStepSizePx( ldomNode * enode, int width )
+{
+    css_length_t step = enode->getStyle()->block_step_size;
+    if ( step.type == css_val_unspecified &&
+            (step.value == css_generic_none || step.value == css_generic_auto) )
+        return 0;
+    int step_px = lengthToPx( enode, step, width );
+    return step_px > 0 ? step_px : 0;
+}
+
+static inline int snapHeightToStep( int height_px, int step_px )
+{
+    if ( height_px <= 0 || step_px <= 0 )
+        return height_px;
+    int rem = height_px % step_px;
+    return rem ? (height_px + (step_px - rem)) : height_px;
+}
+
+static inline int getBlockStepDelta( int h, int margin_top, int margin_bottom, int block_step_px )
+{
+    if ( block_step_px <= 0 )
+        return 0;
+    int outer_h = h + margin_top + margin_bottom;
+    int snapped_outer_h = snapHeightToStep( outer_h, block_step_px );
+    return snapped_outer_h - outer_h;
+}
+
 // Legacy/original CRE block rendering
 int renderBlockElementLegacy( LVRendPageContext & context, ldomNode * enode, int x, int y, int width, int usable_right_overflow )
 {
@@ -8544,6 +8571,8 @@ void renderBlockElementEnhanced( FlowState * flow, ldomNode * enode, int x, int 
                 int h = renderTable( *(flow->getPageContext()), enode, 0, flow->getCurrentRelativeY(),
                             table_width, table_shrink_to_fit, min_width, fitted_width,
                             direction, avoid_pb_inside, true, is_ruby_table );
+                int block_step_px = getBlockStepSizePx( enode, width );
+                margin_bottom += getBlockStepDelta( h, margin_top, margin_bottom, block_step_px );
                 // Reload fmt, as renderTable() may have set some flags
                 fmt = RenderRectAccessor( enode );
                 // (It feels like we don't need to ensure a table specified height.)
@@ -8917,6 +8946,9 @@ void renderBlockElementEnhanced( FlowState * flow, ldomNode * enode, int x, int 
                     }
                 }
 
+                int block_step_px = getBlockStepSizePx( enode, width );
+                margin_bottom += getBlockStepDelta( h, margin_top, margin_bottom, block_step_px );
+
                 // Finally, get the height used by our padding and children.
                 // Original fmt.setY() might have been updated by collapsing margins,
                 // but we got the real final height.
@@ -9142,6 +9174,8 @@ void renderBlockElementEnhanced( FlowState * flow, ldomNode * enode, int x, int 
                 }
 
                 int h = padding_top + final_h + pad_style_h + padding_bottom;
+                int block_step_px = getBlockStepSizePx( enode, width );
+                margin_bottom += getBlockStepDelta( h, margin_top, margin_bottom, block_step_px );
                 final_min_y += padding_top;
                 final_max_y += padding_top;
                 int top_overflow = final_min_y < 0 ? -final_min_y : 0;
